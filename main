@@ -1,0 +1,333 @@
+/** @jsxImportSource https://esm.sh/react@18.2.0 */
+import React, { useState, useEffect } from "https://esm.sh/react@18.2.0";
+import { createRoot } from "https://esm.sh/react-dom@18.2.0/client";
+
+const CHRISTIAN_AFFIRMATIONS = [
+  "I can do all things through Christ who strengthens me. - Philippians 4:13",
+  "The Lord is my shepherd; I shall not want. - Psalm 23:1",
+  "Trust in the Lord with all your heart. - Proverbs 3:5",
+  "Be strong and courageous. Do not be afraid. - Joshua 1:9",
+  "God is our refuge and strength. - Psalm 46:1"
+];
+
+const MOTIVATIONAL_QUOTES = [
+  "Believe you can and you're halfway there. - Theodore Roosevelt",
+  "The only way to do great work is to love what you do. - Steve Jobs",
+  "Success is not final, failure is not fatal. - Winston Churchill",
+  "Your attitude determines your direction. - Unknown",
+  "Dream big and dare to fail. - Norman Vaughan"
+];
+
+const KENYAN_KETO_MEALS = [
+  {
+    meal: "Eggs with Avocado",
+    description: "2 boiled eggs, 1/2 avocado, sprinkled with salt and pepper",
+    type: "Breakfast (after 18hr fast)",
+    calories: 350,
+    protein: 15
+  },
+  {
+    meal: "Chicken and Greens",
+    description: "Grilled chicken thighs, sukuma wiki (collard greens), with olive oil",
+    type: "Lunch",
+    calories: 400,
+    protein: 25
+  },
+  {
+    meal: "Fish with Cabbage",
+    description: "Grilled tilapia, side of sautéed cabbage with butter",
+    type: "Dinner",
+    calories: 300,
+    protein: 20
+  }
+];
+
+function App() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState('');
+  const [affirmation, setAffirmation] = useState('');
+  const [mealPlan, setMealPlan] = useState(null);
+  const [weather, setWeather] = useState(null);
+  const [quote, setQuote] = useState('');
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    const randomAffirmation = CHRISTIAN_AFFIRMATIONS[Math.floor(Math.random() * CHRISTIAN_AFFIRMATIONS.length)];
+    const randomMealPlan = KENYAN_KETO_MEALS[Math.floor(Math.random() * KENYAN_KETO_MEALS.length)];
+    const randomQuote = MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)];
+    
+    setAffirmation(randomAffirmation);
+    setMealPlan(randomMealPlan);
+    setQuote(randomQuote);
+
+    // Fetch weather for Nairobi
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=-1.2921&longitude=36.8219&current_weather=true&hourly=temperature_2m,relativehumidity_2m,windspeed_10m')
+      .then(response => response.json())
+      .then(data => {
+        setWeather({
+          temperature: data.current_weather.temperature,
+          windspeed: data.current_weather.windspeed
+        });
+      })
+      .catch(error => console.error('Weather fetch error:', error));
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatDate = (date) => {
+    return date.toLocaleDateString('en-GB', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
+  const addTask = () => {
+    if (newTask.trim()) {
+      setTasks([...tasks, { id: Date.now(), text: newTask, completed: false }]);
+      setNewTask('');
+    }
+  };
+
+  const toggleTask = (id) => {
+    setTasks(tasks.map(task => 
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  };
+
+  const deleteTask = (id) => {
+    setTasks(tasks.filter(task => task.id !== id));
+  };
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.timeSection}>
+        <h1 style={styles.dateTime}>{formatTime(currentTime)}</h1>
+        <p style={styles.dateSubtitle}>{formatDate(currentTime)}</p>
+      </div>
+
+      {weather && (
+        <div style={styles.weatherSection}>
+          <p>🌡️ {weather.temperature}°C | 💨 {weather.windspeed} km/h</p>
+        </div>
+      )}
+
+      <div style={styles.motivationSection}>
+        <p style={styles.quoteStyle}>"{quote}"</p>
+      </div>
+
+      <div style={styles.affirmationSection}>
+        <h2>Daily Christian Affirmation</h2>
+        <p>"{affirmation}"</p>
+      </div>
+
+      <div style={styles.dietSection}>
+        <h2>Kenyan Keto Meal Plan</h2>
+        {mealPlan && (
+          <div>
+            <h3>{mealPlan.type}</h3>
+            <p>{mealPlan.meal}: {mealPlan.description}</p>
+            <p>🔥 {mealPlan.calories} calories | 💪 {mealPlan.protein}g protein</p>
+          </div>
+        )}
+        <p><strong>Fasting Period:</strong> 18 hours (typically 8 PM - 2 PM next day)</p>
+      </div>
+
+      <div style={styles.exerciseSection}>
+        <h2>Exercise Recommendation</h2>
+        <p>Best time to exercise: Between 4-6 PM</p>
+        <ul>
+          <li>🏋️ 30 min strength training</li>
+          <li>🚶 20 min cardio</li>
+          <li>🧘 10 min stretching</li>
+        </ul>
+      </div>
+
+      <div style={styles.taskSection}>
+        <h2>Daily Tasks</h2>
+        <div style={styles.taskInput}>
+          <input 
+            type="text" 
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            placeholder="Enter a new task"
+            style={styles.taskInputField}
+          />
+          <button onClick={addTask} style={styles.addTaskButton}>Add Task</button>
+        </div>
+        <ul style={styles.taskList}>
+          {tasks.map(task => (
+            <li 
+              key={task.id} 
+              style={{
+                ...styles.taskItem,
+                textDecoration: task.completed ? 'line-through' : 'none'
+              }}
+            >
+              <input 
+                type="checkbox" 
+                checked={task.completed}
+                onChange={() => toggleTask(task.id)}
+              />
+              {task.text}
+              <button onClick={() => deleteTask(task.id)}>🗑️</button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <footer style={styles.footer}>
+        <a href={import.meta.url.replace("esm.town", "val.town")} target="_top">View Source</a>
+      </footer>
+    </div>
+  );
+}
+
+const styles = {
+  container: {
+    fontFamily: 'Arial, sans-serif',
+    maxWidth: '600px',
+    margin: '0 auto',
+    padding: '20px',
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    color: 'white',
+    backgroundImage: 'url(https://maxm-imggenurl.web.val.run/cosmic-eye-of-the-universe-high-resolution)',
+    backgroundSize: 'cover',
+    backgroundBlendMode: 'overlay',
+    borderRadius: '15px',
+    boxShadow: '0 0 30px rgba(255,255,255,0.2)'
+  },
+  timeSection: {
+    textAlign: 'center',
+    marginBottom: '20px'
+  },
+  dateTime: {
+    fontSize: '4rem',
+    margin: 0,
+    color: 'white',
+    textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+  },
+  dateSubtitle: {
+    fontSize: '1.2rem',
+    margin: 0,
+    color: 'rgba(255,255,255,0.8)'
+  },
+  weatherSection: {
+    textAlign: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    padding: '10px',
+    borderRadius: '10px',
+    marginBottom: '15px'
+  },
+  motivationSection: {
+    textAlign: 'center',
+    fontStyle: 'italic',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: '15px',
+    borderRadius: '10px',
+    marginBottom: '15px'
+  },
+  quoteStyle: {
+    margin: 0,
+    color: 'rgba(255,255,255,0.9)'
+  },
+  affirmationSection: { 
+    backgroundColor: 'rgba(0,100,0,0.5)', 
+    padding: '15px', 
+    borderRadius: '10px',
+    marginBottom: '15px'
+  },
+  dietSection: { 
+    backgroundColor: 'rgba(0,0,100,0.5)', 
+    padding: '15px', 
+    borderRadius: '10px',
+    marginBottom: '15px'
+  },
+  exerciseSection: { 
+    backgroundColor: 'rgba(100,0,0,0.5)', 
+    padding: '15px', 
+    borderRadius: '10px',
+    marginBottom: '15px'
+  },
+  taskSection: { 
+    backgroundColor: 'rgba(100,100,100,0.5)', 
+    padding: '15px', 
+    borderRadius: '10px'
+  },
+  taskInput: { 
+    display: 'flex', 
+    marginBottom: '10px' 
+  },
+  taskInputField: {
+    flex: 1,
+    padding: '10px',
+    borderRadius: '5px',
+    border: 'none'
+  },
+  addTaskButton: {
+    marginLeft: '10px',
+    padding: '10px',
+    backgroundColor: '#4CAF50',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer'
+  },
+  taskList: { 
+    listStyle: 'none', 
+    padding: 0 
+  },
+  taskItem: {
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    padding: '10px',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginBottom: '5px',
+    borderRadius: '5px',
+    color: 'white'
+  },
+  footer: { 
+    marginTop: '20px', 
+    textAlign: 'center', 
+    fontSize: '0.8em',
+    color: 'rgba(255,255,255,0.7)'
+  }
+};
+
+function client() {
+  createRoot(document.getElementById("root")).render(<App />);
+}
+
+if (typeof document !== "undefined") { client(); }
+
+export default async function server(request: Request): Promise<Response> {
+  return new Response(`
+    <html>
+      <head>
+        <title>Cosmic Wellness Companion</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://esm.town/v/std/catch"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+        <style>
+          body { margin: 0; overflow-x: hidden; }
+        </style>
+      </head>
+      <body>
+        <div id="root"></div>
+        <script type="module" src="${import.meta.url}"></script>
+      </body>
+    </html>
+  `, {
+    headers: { "content-type": "text/html" }
+  });
+}
